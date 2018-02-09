@@ -1,6 +1,9 @@
 # NeoSync
 
 CLI Synchronisation utility between local files and Neolane / Adobe Campaign
+
+In French :
+
 Utilitaire en ligne de commande de synchronisation entre fichier locaux et Neolane
 
 ## Before starting
@@ -50,19 +53,21 @@ NeoSync -f nms:delivery=TOTO;nms:delivery=TATA
 This command will create the TOTO.xml and TATA.xml files on the current local directory
 
 Avaiblale fetch :
-- xtk:javascript=ns:name => a ns_name.js file (src file)
-- xtk:jst=ns:name => a ns_name.jst file
-- xtk:jssp=ns:name => a ns_name => a .jssp file
-- xtk:workflow=internaleName => a internaleName.xml file (the wofklow as XML)
-- xtk:form=ns:name => a ns_name.xml file
-- xtk:srcSchema=ns:name => a ns_name.xml file
-- nms:delivery=internalName => a internalName.xml file
-- nms:includeView=internalName => a internalName.xml file
-- ncm:content=internalName => a internalName.xml file
-- nms:delivery=internalName[html] => a internalName.html file containing only the html source of the delivery
-- nms:delivery=internalName[txt] => a internalName.txt file containing only the text source of the delivery
-- nms:includeView=internalName[html] => a internalName.ieview.html file containing only the html source of the include view
-- nms:includeView=internalName[txt] => a internalName.ieview.txt file containing only the text source of the include view
+| Fetch | Key | Result 
+| ------------- |:----------------:| -----:|
+| xtk:javascript | ns:name  |  a ns_name.js file (src file)
+| xtk:jst | ns:name  |  a ns_name.jst file
+| xtk:jssp | ns:name  |  a ns_name  |  a .jssp file
+| xtk:workflow | internaleName  |  a internaleName.xml file (the wofklow as XML)
+| xtk:form | ns:name  |  a ns_name.xml file
+| xtk:srcSchema | ns:name  |  a ns_name.xml file
+| nms:delivery | internalName  |  a internalName.xml file
+| nms:includeView | internalName  |  a internalName.xml file
+| ncm:content | internalName  |  a internalName.xml file
+| nms:delivery | internalName[html]  |  a internalName.html file containing only the html source of the delivery
+| nms:delivery | internalName[txt]  |  a internalName.txt file containing only the text source of the delivery
+| nms:includeView | internalName[html]  |  a internalName.ieview.html file containing only the html source of the include view
+| nms:includeView | internalName[txt]  |  a internalName.ieview.txt file containing only the text source of the include view
 
 ### Push source to the server
 ```
