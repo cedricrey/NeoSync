@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+		<title>index</title>
+		<meta name="description" content="">
+		<meta name="author" content="Ced">
+
+		<meta name="viewport" content="width=device-width; initial-scale=1.0">
+
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico">
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+		<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+		<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.17/angular.min.js"></script>
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+		<style>
+			@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300);
+			html{
+			    padding:0;
+			    margin:0;
+			}
+			body {
+				padding: 20px 10px 10px;
+				margin:0;
+				font-family: 'Open Sans', sans-serif;
+				color: #575757;
+				background: url('images/rolling-waves.jpg') repeat fixed center center /cover rgba(0, 0, 0, 0);
+			}
+			.info{
+                text-align: center;
+                padding: 5px 0 0;
+                background-color: #EEE;
+                background: linear-gradient(to bottom, #f0f0f0, #e9e9e9);
+                background: linear-gradient(to bottom, rgba(240, 240, 240, 0.9), rgba(233, 233, 233, 0.9)) repeat scroll 0 0 rgba(0, 0, 0, 0);
+                text-shadow:0 1px #fff;
+                text-align:left;	
+                display:block;
+                position:fixed;
+                left:0;
+                top:0;
+                width:100%;
+                cursor:default;		    
+			}
+			.info span{
+			    float:right;
+                font-size: 14px;
+			}
+            h1 {
+                font-weight: bold;
+                font-size: 14px;
+                margin:0;
+                padding:0 0 0 5px;
+            }
+			.action {
+				cursor: pointer;
+				color: #337ab7;
+			}
+			.action:hover {
+				color: #286090;
+			}
+			.tools span {
+				cursor: pointer;
+			}
+			ul {
+				list-style: none;
+				padding: 0;
+			}
+
+			li .tools {
+				display: inline-block;
+				width: 70px;
+				padding-left: 4px;
+			}
+			li .tools .action {
+				cursor: pointer;
+				font-size: 1.2em;
+			}
+			.dir .elName:before {
+				content: '\1F4C1';
+				display: inline-block;
+				width: 20px;
+			}
+			.dir .elName {
+				cursor: pointer;
+				color: #739DBB;
+			}
+			.elName {
+				display: inline-block;
+				width: calc(100% - 80px);
+			}
+			nav {
+				float: left;
+				width: 600px;
+				/*max-width: 30%;*/
+			}
+			.window, .fileInfo {
+				/*border: 1px solid #DDD;*/
+				background-color: #FAFAFA;
+				border-radius: 6px;
+				box-shadow: 0 9px 20px 5px rgba(0, 0, 0, 0.36);
+				margin: 1em;
+			}
+			.window {
+				padding-bottom: 10px;
+			}
+			.window .title {
+				text-align: center;
+				padding: 5px 0 0;
+				background-color: #EEE;
+				background: linear-gradient(to bottom, #f0f0f0, #e9e9e9);
+				border-radius: 6px 6px 0 0;
+				text-shadow:0 1px #fff;
+			}
+			.window .title .action {
+				color: #5cb85c;
+				float: left;
+				padding-left: 4px;
+			}
+			.window .title .glyphicon-eye-close {
+				color: #d9534f;
+			}
+			.fetchForm .fields {
+				padding: 10px;
+			}
+			.fetchForm label {
+				width: 100px;
+			}
+			.fetchForm input[type=text], .fetchForm select {
+				width: 300px;
+			}
+
+			nav li {
+				position: relative;
+				cursor: default;
+				padding: 3px;
+			}
+			nav li .fileInfo {
+				display: none;
+				position: absolute;
+				background-color: transparent;
+				background-color: rgba(250,250,250, 0.95);
+				width: 60%;
+				z-index: 100;
+				padding: 10px;
+				margin: 0;
+				left: 10%;
+			}
+			nav li:hover .fileInfo {
+				display: block;
+				position: absolute;
+			}
+			li:nth-child(2n) {
+				background-color: #EEE;
+			}
+			.currentWatches, .filesHistoric {
+				float: left;
+				width: 400px;
+				max-width: 50%;
+			}
+			.list li {
+				padding: 4px 10px;
+			}
+			.loading {
+				min-height: 100px;
+				width: 80%;
+				height: 80%;
+				margin: 0 auto;
+				position: fixed;
+				top: 10%;
+				background-color: rgba(0,0,0,0.8);
+				text-align: center;
+				padding: 10px;
+				/*-webkit-animation: loadAnim 2s ease 0s infinite alternate;
+				 animation: loadAnim 2s ease 0s infinite alternate;*/
+				border-radius: 15px;
+				color: #FFF;
+				font: 1em normal "Arial", sans;
+				text-transform: uppercase;
+				vertical-align: middle;
+			}
+			.loading:before {
+				content: " ";
+				width: 100%;
+				height: 120px;
+				margin: 10px;
+				display: inline-block;
+				vertical-align: middle;
+				-webkit-animation: rotateAnim 1s linear 0s infinite;
+				animation: rotateAnim 1s linear 0s infinite;
+				background: url('http://perso.cedricrey.fr/images/loading.png') no-repeat center top transparent;
+			}
+			@-webkit-keyframes loadAnim{
+			from {
+				background-color: #000;
+				color: #FFF;
+			}
+			to {
+				color: #000;
+				background-color: #FFF;
+			}
+			}
+			@-keyframes
+			loadAnim {from{
+				background-color: #000;
+				color: #FFF;
+			}
+			to {
+				color: #000;
+				background-color: #FFF;
+			}
+			}
+			@-webkit-keyframes
+			rotateAnim {from{
+				-webkit-transform: rotate(0deg);
+			}
+			to {
+				-webkit-transform: rotate(360deg);
+			}
+			}
+			@-keyframes
+			rotateAnim {from{
+				transform: rotate(0deg);
+			}
+			to {
+				transform: rotate(360deg);
+			}
+			}
+
+			@media screen and (max-width: 768px) {
+
+				#availableStations, #selectedStations {
+					display: block;
+					width: 100%;
+				}
+				.stationSection {
+					margin-top: 1em;
+					float: none;
+				}
+				#selectedStations {
+					margin-top: 30px;
+				}
+
+			}
+
+		</style>
+	</head>
+
+	<body>
+		<div ng-app="neoSyncApp">
+			<div ng-controller="TabController as tab" class="tabController">
+				<div id="resume" ng-controller="NeoSyncControll">
+                    <section class="info">  
+                        <span><b>{{NeoConf.userName}}</b> &nbsp;&nbsp; {{NeoConf.server}} (mode {{NeoConf.mode}})</span>
+                        <!--ul><li ng-repeat="files in configFiles" >{{files}}</li></ul-->
+                        <h1 id="pageTitle">NeoSync</h1>
+					</section>
+					<form class="window fetchForm">
+						<div class="title">
+							Ramener un element du serveur
+						</div>
+						<section class="fields">
+
+							<label for="">Type d'objet</label>
+							<select name="" id="" ng-model="fetchEltType">
+								<option value="xtk_javascript">Javascript</option>
+								<option value="xtk_jst">JST</option>
+								<option value="xtk_jssp">JavaScript Server Page (JSSP)</option>
+								<option value="xtk_form">Formulaire Neolane</option>
+								<option value="xtk_srcSchema">Schéma Source</option>
+								<option value="nms_delivery">Diffusion</option>
+								<option value="nms_delivery_html">HTML d'une Diffusion</option>
+								<option value="nms_delivery_txt">Texte d'une Diffusion</option>
+								<option value="nms_includeView">Bloc de perso</option>
+								<option value="nms_includeView_html">HTML d'un Bloc de perso</option>
+								<option value="nms_includeView_txt">Texte d'un Bloc de perso</option>
+							</select>
+							<br>
+							<label for="">Clef : </label>
+							<input type="text" ng-model="newFetchEltName" placeholder="{{getNewFetchKey()}}"/>
+							<input type="submit" ng-click="newFetch()" value="OK"/>
+						</section>
+					</form>
+
+					<nav>
+						<!--ul>
+						<li ng-class="{ active:tab.isSet(1) }" ng-click="tab.setTab(1)">
+						&#x2B06; &nbsp;&nbsp;Pousser sur le serveur (surveiller un dossier)
+						</li>
+						<li ng-class="{ active:tab.isSet(2) }" ng-click="tab.setTab(2)">
+						&#x2B07; &nbsp;&nbsp;Récuperer du serveur
+						</li>
+
+						</ul-->
+						<section class="explorer window">
+
+							<div class="title">
+								<span  ng-hide="currentPath == ''">
+									<span ng-click="addWatch(currentPath)" ng-hide="isDirectoryWatched(currentPath)" class="action glyphicon glyphicon-eye-open" title="Surveiller {{currentPath}} "></span>
+									<span ng-click="removeWatch(currentPath)" ng-show="isDirectoryWatched(currentPath)" class="action glyphicon glyphicon-eye-close" title="Arreter de surveiller {{currentPath}} "></span>
+								    <span ng-click="openFolder( currentPath )" class="action glyphicon glyphicon-folder-open" title="Ouvrir {{currentPath}}"></span>
+								</span>
+								{{currentPath}}
+							</div>
+
+							<ul>
+								<li class="dir" ng-hide="currentPath == '\/' || currentPath == ''">
+									<span class="tools"> </span>
+									<span ng-click="changeDirectory('..')" class="elName">..</span>
+								</li>
+								<li ng-repeat="elt in dirElements | orderBy : 'name'" ng-class="getClassName(elt) " ng-show="elt.type == 'dir' || (elt.type == 'file' && elt.fetchDetails.schema)">
+									<span ng-show="elt.type == 'dir'" class="tools"> 
+									   <span ng-click="addWatch(currentPath + elt.name)" ng-hide="isDirectoryWatched(currentPath + elt.name)" title="Surveiller {{currentPath + elt.name}}" class=" glyphicon glyphicon-eye-open action"></span>
+									   <span ng-click="removeWatch(currentPath + elt.name)" ng-show="isDirectoryWatched(currentPath + elt.name)" class="action glyphicon glyphicon-eye-close" title="Arreter de surveiller {{currentPath + elt.name}} "></span> 
+									   <span ng-click="openFolder( currentPath + elt.name )" class="action glyphicon glyphicon-folder-open" title="Ouvrir {{elt.name}}"></span>
+									</span>
+									<span ng-show="elt.type == 'file' && elt.fetchDetails.schema" class="tools">
+									   <span ng-click="push(elt.name)" title="Pousser sur le serveur" class="glyphicon glyphicon-open action"></span>
+									   <span ng-click="fetch(elt.fetch)" title="Obternir du serveur" class="glyphicon glyphicon-cloud-download action"></span>
+									   <span ng-click="openFolder( currentPath + elt.name )" class="action glyphicon glyphicon-pencil" title="Ouvrir {{elt.name}}"></span>
+									</span>
+									<span ng-click="clickElement(elt)" class="elName">{{elt.name}}</span>
+									<span class="fileInfo" ng-show="elt.type == 'file'"> Schema : {{elt.fetchDetails.schema}} 
+                                            <br/>
+									       <span ng-show="elt.fetchDetails.specificKey">
+											Version : {{elt.fetchDetails.specificKey}}
+                                            <br/>
+											</span>
+											Nom : {{elt.fetchDetails.primaryKey}}
+								    </span>
+								</li>
+							</ul>
+						</section>
+
+						<div ng-show="tab.isSet(1)"></div>
+						<div ng-show="tab.isSet(2)"></div>
+					</nav>
+
+					<div class="currentWatches window">
+						<div class="title">
+							Dossier surveillés
+						</div>
+						<ul class="list">
+							<li ng-repeat="watch in currentWatches">
+								{{watch.path}}
+							</li>
+						</ul>
+					</div>
+
+					<div class="filesHistoric window">
+						<div class="title">
+							Fichiers envoyés
+						</div>
+						<ul class="list">
+							<li ng-repeat="file in historic">
+								le {{file.date | date:'dd/MM/yyyy à HH:mm:ss'}}
+								<br/>
+								{{file.file.fileName}}
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		/*NeoSync WebApp*/
+
+		var neoSyncApp = angular.module('neoSyncApp', []);
+
+		neoSyncApp.controller("TabController", ['$scope',
+		function($scope) {
+			this.tab = 1;
+
+			this.isSet = function(checkTab) {
+				return this.tab === checkTab;
+			};
+			this.setTab = function(setTab) {
+				this.tab = setTab;
+			};
+		}]);
+
+		neoSyncApp.controller("NeoSyncControll", ['$scope', '$http',
+		function($scope, $http) {
+			$scope.currentPath = 1;
+			$scope.historic = new Array();
+			$scope.dirElements = new Array();
+			$scope.currentWatches = new Array();
+			$scope.configFiles = new Array();
+			$scope.fetchEltType = "nms_delivery_html";
+			$scope.newFetchEltName = "";
+			$scope.pathSep = "/";
+
+			$scope.refreshInformations = function() {
+				$http.get('/refreshInformations').success(function(data, status, headers, config) {
+					//data = JSON.parse(data);
+					$scope.currentPath = data.currentPath;
+					$scope.historic = data.historyFiles;
+					$scope.dirElements = data.dirElements;
+					$scope.currentWatches = data.currentWatches;
+					$scope.configFiles = data.configFiles;
+					$scope.NeoConf = data.NeoConf;
+					$scope.pathSep = data.pathSep;
+				}).error(function(data, status, headers, config) {
+					// called asynchronously if an error occurs
+					// or server returns response with an error status.
+				});
+			};
+			$scope.refreshInformations();
+
+			$scope.socket = io();
+			$scope.socket.on('refreshInformation', function(data) {
+				data = JSON.parse(data);
+				$scope.currentPath = data.currentPath;
+				$scope.historic = data.historyFiles;
+				$scope.dirElements = data.dirElements;
+				$scope.currentWatches = data.currentWatches;
+				$scope.NeoConf = data.NeoConf;
+				$scope.pathSep = data.pathSep;
+				$scope.$apply();
+			});
+			$scope.getClassName = function(elt) {
+				var className = "";
+				if (elt.type == 'dir')
+					className = "dir";
+				else
+					className = "file " + elt.fetchDetails.schema.replace(":", '_') + " " + elt.fetchDetails.specificKey;
+				return className;
+			};
+			$scope.clickElement = function(elt) {
+				if (elt.type == 'dir')
+					$scope.changeDirectory(elt.name);
+			};
+			$scope.changeDirectory = function(dirname) {
+				console.log("Change dir : " + dirname);
+				$scope.socket.emit('changeDirectory', dirname);
+			};
+			$scope.addWatch = function(dirname) {
+				$scope.socket.emit('addWatch', dirname);
+			};
+			$scope.removeWatch = function(dirname) {
+				$scope.socket.emit('removeWatch', dirname);
+				$scope.socket.emit('removeWatch', dirname + $scope.pathSep);
+			};
+			$scope.push = function(dirname) {
+				$scope.socket.emit('push', dirname);
+			};
+			$scope.fetch = function(fetch) {
+				$scope.socket.emit('fetch', fetch);
+			};
+			$scope.openFolder = function(folder) {
+                $scope.socket.emit('openFolder', folder);
+            };
+			$scope.isDirectoryWatched = function(DirPath) {
+				var directoryWatch = false;
+				angular.forEach($scope.currentWatches, function(watch, key) {
+					if (watch.path == DirPath || watch.path == DirPath + $scope.pathSep)
+						directoryWatch = true;
+				});
+				return directoryWatch;
+			};
+			$scope.typeSchemas = {
+				"xtk_javascript" : "xtk:javascript",
+				"xtk_jst" : "xtk:jst",
+				"xtk_jssp" : "xtk:jssp",
+				"xtk_form" : "xtk:form",
+				"xtk_srcSchema" : "xtk:srcSchema",
+				"nms_delivery" : "nms:delivery",
+				"nms_delivery_html" : "nms:delivery",
+				"nms_delivery_txt" : "nms:delivery",
+				"nms_includeView" : "nms:includeView",
+				"nms_includeView_html" : "nms:includeView",
+				"nms_includeView_txt" : "nms:includeView",
+			};
+			$scope.newFetch = function() {
+				var fetch = $scope.typeSchemas[$scope.fetchEltType] + "=" + $scope.newFetchEltName;
+				if (["nms_delivery_html", "nms_includeView_html"].indexOf($scope.fetchEltType) != -1)
+					fetch += "[html]";
+				if (["nms_delivery_txt", "nms_includeView_txt"].indexOf($scope.fetchEltType) != -1)
+					fetch += "[txt]";
+				$scope.socket.emit('fetch', fetch);
+			};
+			$scope.keySchemas = {
+				'xtk_javascript' : '@namespace:@name (vsc:monJavaScript)',
+				'xtk_jst' : '@namespace:@name (vsc:monJST)',
+				'xtk_jssp' : '@namespace:@name (vsc:monJSSP)',
+				'xtk_form' : '@namespace:@name (vsc:monForm)',
+				'xtk_srcSchema' : '@namespace:@name (vsc:monSchema)',
+				'nms_delivery' : '@internalName (DMXXXXXX)',
+				"nms_delivery_html" : '@internalName (DMXXXXXX)',
+				"nms_delivery_txt" : '@internalName (DMXXXXXX)',
+				'nms_includeView' : '@name (vscMonBlocDePerso)',
+				"nms_includeView_html" : '@name (vscMonBlocDePerso)',
+				"nms_includeView_txt" : '@name (vscMonBlocDePerso)'
+			};
+			$scope.getNewFetchKey = function() {
+				if ($scope.fetchEltType)
+					return $scope.keySchemas[$scope.fetchEltType];
+				return "";
+			};
+		}]);
+	</script>
+</html>

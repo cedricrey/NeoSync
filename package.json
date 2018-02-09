@@ -1,0 +1,18 @@
+{
+	"name":"NeoSync",
+	"version":"2.0.1",
+	"description":"Utilitaire de synchronisation entre fichier locaux et Neolane",
+	"author":"Cedric Rey <contact@cedricrey.fr>",
+	"main":"mainApp.html",
+	"window": {
+        "toolbar": false,
+        "resizable": true,
+        "width": 1280,
+        "height": 650,
+        "min_width": 500,
+        "min_height": 300,
+        "position": "mouse",
+    	"icon" : "../images/NeoSync.ico"
+    },
+    "winIco" : "../images/NeoSync.ico"
+}
