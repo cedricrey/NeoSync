@@ -30,14 +30,14 @@ I forgot how I did on my mac, it's been long time... I think I did it manually ?
 So anyway, be sure that the source folder is in your Path, that's all.
 
 
-### Use
+## Use
 
 Main command is 
 ```
 NeoSync -[w,f,p,pa] options
 ```
 
-#### Fetch source
+### Fetch source
 ```
 NeoSync -f namespace:schema=logicKey[;namespace:schema=logicKey]
 NeoSync -fetch namespace:schema=logicKey[;namespace:schema=logicKey]
@@ -64,7 +64,7 @@ Avaiblale fetch :
 	- nms:includeView=internalName[html] => a internalName.ieview.html file containing only the html source of the include view
 	- nms:includeView=internalName[txt] => a internalName.ieview.txt file containing only the text source of the include view
 
-####Push source to the server
+###Push source to the server
 ```
 NeoSync -p localfilename
 NeoSync -push localfilename
@@ -80,14 +80,14 @@ Attention please : if the parameter 'devMode' is set to 0 in the neoSync.conf of
 Other source will be ignored. This is a security if non developpers want to work with NeoSync (HTML integration, Marketing people etc.).
 Also, if a push is done, NeoSync will make a backup of the current server source before pushing. The backup is in the "NeoSync/BACKUP" folder into the user folder (next to neoSync.conf)
 
-####Push all source to the server
+###Push all source to the server
 ```
 NeoSync -pa
 NeoSync -pushall
 ```
 Same as before, but for all the file into the current folder
 
-####Watch the current folder and push when change are made
+###Watch the current folder and push when change are made
 ```
 NeoSync -w
 NeoSync -watch
@@ -95,7 +95,7 @@ NeoSync -watch
 NeoSync will push a file when a change is detected.
 You can :
 - change the directory with the '-d path/to/watch' option if you don't want watch the current directory
-- specify a pattern for the files to push with '-pattern yourpattern'. For example, if you want to push only Javascript, `NeoSync -w -pattern *.js`
+- specify a pattern for the files to push with '-pattern yourpattern'. For example, if you want to push only Javascript, NeoSync -w -pattern *.js`
 
 ## Authors
 
