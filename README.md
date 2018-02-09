@@ -50,21 +50,21 @@ NeoSync -f nms:delivery=TOTO;nms:delivery=TATA
 This command will create the TOTO.xml and TATA.xml files on the current local directory
 
 Avaiblale fetch :
-	- xtk:javascript=ns:name => a ns_name.js file (src file)
-	- xtk:jst=ns:name => a ns_name.jst file
-	- xtk:jssp=ns:name => a ns_name => a .jssp file
-	- xtk:workflow=internaleName => a internaleName.xml file (the wofklow as XML)
-	- xtk:form=ns:name => a ns_name.xml file
-	- xtk:srcSchema=ns:name => a ns_name.xml file
-	- nms:delivery=internalName => a internalName.xml file
-	- nms:includeView=internalName => a internalName.xml file
-	- ncm:content=internalName => a internalName.xml file
-	- nms:delivery=internalName[html] => a internalName.html file containing only the html source of the delivery
-	- nms:delivery=internalName[txt] => a internalName.txt file containing only the text source of the delivery
-	- nms:includeView=internalName[html] => a internalName.ieview.html file containing only the html source of the include view
-	- nms:includeView=internalName[txt] => a internalName.ieview.txt file containing only the text source of the include view
+- xtk:javascript=ns:name => a ns_name.js file (src file)
+- xtk:jst=ns:name => a ns_name.jst file
+- xtk:jssp=ns:name => a ns_name => a .jssp file
+- xtk:workflow=internaleName => a internaleName.xml file (the wofklow as XML)
+- xtk:form=ns:name => a ns_name.xml file
+- xtk:srcSchema=ns:name => a ns_name.xml file
+- nms:delivery=internalName => a internalName.xml file
+- nms:includeView=internalName => a internalName.xml file
+- ncm:content=internalName => a internalName.xml file
+- nms:delivery=internalName[html] => a internalName.html file containing only the html source of the delivery
+- nms:delivery=internalName[txt] => a internalName.txt file containing only the text source of the delivery
+- nms:includeView=internalName[html] => a internalName.ieview.html file containing only the html source of the include view
+- nms:includeView=internalName[txt] => a internalName.ieview.txt file containing only the text source of the include view
 
-###Push source to the server
+### Push source to the server
 ```
 NeoSync -p localfilename
 NeoSync -push localfilename
@@ -80,14 +80,14 @@ Attention please : if the parameter 'devMode' is set to 0 in the neoSync.conf of
 Other source will be ignored. This is a security if non developpers want to work with NeoSync (HTML integration, Marketing people etc.).
 Also, if a push is done, NeoSync will make a backup of the current server source before pushing. The backup is in the "NeoSync/BACKUP" folder into the user folder (next to neoSync.conf)
 
-###Push all source to the server
+### Push all source to the server
 ```
 NeoSync -pa
 NeoSync -pushall
 ```
 Same as before, but for all the file into the current folder
 
-###Watch the current folder and push when change are made
+### Watch the current folder and push when change are made
 ```
 NeoSync -w
 NeoSync -watch
