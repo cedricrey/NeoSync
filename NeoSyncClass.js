@@ -12,7 +12,7 @@ var fs = require('fs'),
 
 PromiseCounter = 0;
 //console.log(Promise.prototype.toString);
-let oldPromiseToString = Promise.prototype.toString;
+var oldPromiseToString = Promise.prototype.toString;
 Promise.prototype.toString = function(){
 	/*
 	var t = [];
@@ -184,7 +184,9 @@ NeoSync.prototype.pushAction = function( actionFunction, sync, args ){
 		}.bind(this, actionFunction, args ) 
 	);
 
-	this.mainWorkflow.catch( ( error )  => { console.log( "Error on a process ",error )});
+	this.mainWorkflow.catch( ( error )  => { //console.log( "Error on a process ",error )
+		NeoSync.displayError( "Error on a process\n" + JSON.stringify( error , null, 1).replace(/{|}/g,'') );
+		});
 	}
 
 
@@ -204,7 +206,9 @@ NeoSync.prototype.pushAction = function( actionFunction, sync, args ){
 		}.bind(this, actionFunction, args ) 
 	);
 
-	this.mainWorkflow.catch( ( error )  => { console.log( "Error on a process ",error )});
+	this.mainWorkflow.catch( ( error )  => { //console.log( "Error on a process ",error )
+		NeoSync.displayError( "Error on a process\n" + JSON.stringify( error , null, 1).replace(/{|}/g,'') );
+		});
 	}
 	this.mainWorkflow.identifier = PromiseCounter++;
 	//if(this.mainWorkflow.identifier == 3)
@@ -524,11 +528,17 @@ NeoSync.startService = function(){
 			//console.log("HEHOOOO J'AI FINI",values)
 			NeoSync.displayGoodBye();
 		//});
+	})
+	.catch(function(values){		
+		//return new Promise( (resolve, reject ) => {				
+			//console.log("HEHOOOO J'AI FINI",values)
+			NeoSync.displayGoodBye();
+		//});
 	});
 	
 	//setInterval(function(){		console.log("allPromises : " + allPromises);	}.bind(this),10)
 };	
-let colors = {
+var colors = {
 		Reset : "\x1b[0m",
 		cyan : "\x1b[36m",
 		white : "\x1b[37m",
@@ -594,6 +604,13 @@ NeoSync.displayGoodBye = function(){
 	}
 	NeoSync.displayCartouche( str );
 }
+NeoSync.displayError = function( error ){
+	var str = error.split('\n');
+	
+	for(var i in str)
+		str[i] = colors.FgRed + str[i] + colors.Reset;
+	NeoSync.displayCartouche( str );	
+}
 NeoSync.displayCartouche = function( str /*Object*/){
 
 	var cols = colors.FgYellow + "║"+ colors.Reset;
@@ -608,8 +625,8 @@ NeoSync.displayCartouche = function( str /*Object*/){
 		//sll[k] = 2 * Math.round( (screenLength - str[k].replace(/\\x1b\[[0-9;]*m/g,"").length) / 2); //Pour avoir un chiffre rond
 
 	var cfNamelength = NeoSync.config.userName.toString().length;
-	console.log(" ");
-	console.log(" ");
+	//console.log(" ");
+	//console.log(" ");
 	console.log(colors.FgYellow+"╔"+ Array(screenLength+1).join("═") +"╗"+colors.Reset);
 	
 	for(var k in str)
@@ -625,7 +642,7 @@ NeoSync.displayCartouche = function( str /*Object*/){
 	*/
 	//console.log();
 	console.log(colors.FgYellow+"╚"+ Array(screenLength+1).join("═") +"╝"+colors.Reset);
-	console.log(" ");
+	//console.log(" ");
 	console.log(" ");
 }
 
