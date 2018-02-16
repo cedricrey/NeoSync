@@ -110,7 +110,13 @@ function NeoSync( options ){
 
 		//console.log("I will watch")
 	//this.pushAction( 
+
+	//Pacth : If no watching, and no Push All, then stop now
+		if(!this.watching && !this.pushAll )
+			return this;
+
 		var launchWatcher = function( onFinish ){
+			console.log("I wanna watch :", this.watching);
 			this.watcher = chokidar.watch(this.directory + pattern, {ignored: /^\./, persistent: true});
 			this.watcher
 			  .on('change', this.changeTriggered.bind(this) )
@@ -119,8 +125,8 @@ function NeoSync( options ){
 			if( this.pushAll )
 				this.watcher.on('add', this.changeTriggered.bind(this) );
 
-			if( !this.watching )
-				this.watcher
+			if( !this.watching 
+)				this.watcher
 			  		.on('ready', function() { this.watcher.close(); onFinish(); }.bind(this));
 			 else
 				{
@@ -143,7 +149,7 @@ function NeoSync( options ){
 				process.stdin.setRawMode(true);
 				process.stdin.resume();
 				}
-			}.bind(this)
+			}.bind(this);
 	this.watcherWorklfow = this.mainWorkflow.then(
 		function(actionFunction, args, resolve, reject){
 			//console.log(resolve)
@@ -237,7 +243,7 @@ NeoSync.prototype.loadWriteClient = function( onLoaded, onError, logonRequest ){
 };
 
 NeoSync.prototype.loadFetchClient = function( onLoaded, onError ){
-	soap.createClient(NeoSync.config.xtkQueryDefWSDL, {endpoint : NeoSync.config.server + "/nl/jsp/soaprouter.jsp"},function(onLoaded, onError, err, client) {
+	soap.createClient(NeoSync.config.xtkQueryDefWSDL, {endpoint : NeoSync.config.server + "/nl/jsp/soaprouter.jsp", preserveWhitespace : true},function(onLoaded, onError, err, client) {
 		//console.log("******* got the soapQueryClient Soap Client and this is ", this);
 				if( err &&  onError)
 					{
@@ -670,13 +676,14 @@ NeoSync.querySelectors = {
 	'nms:includeView_txt' : '<node expr="[source/text]"/>',
 	'ncm:content' : '<node expr="data"/><node expr="@xtkschema"/><node expr="@editForm"/><node expr="@name"/><node expr="@label"/><node expr="[@publishing-name]"/><node expr="[@publishing-namespace]"/><node expr="[channel/@name]"/>'
 };
+NeoSync.queryConditionsNSNM = '<condition expr="@namespace'+currentDb.stringConcat+'\':\''+currentDb.stringConcat+'@name = \'$KEY\'"/>';
 NeoSync.queryConditions = {
-	'xtk:javascript' : '<condition expr="@namespace||\':\'||@name = \'$KEY\'"/>',
-	'xtk:jst' : '<condition expr="@namespace||\':\'||@name = \'$KEY\'"/>',
-	'xtk:jssp' : '<condition expr="@namespace||\':\'||@name = \'$KEY\'"/>',
+	'xtk:javascript' : NeoSync.queryConditionsNSNM,
+	'xtk:jst' : NeoSync.queryConditionsNSNM,
+	'xtk:jssp' : NeoSync.queryConditionsNSNM,
 	'xtk:workflow' : '<condition expr="@internalName = \'$KEY\'"/>',
-	'xtk:form' : '<condition expr="@namespace||\':\'||@name = \'$KEY\'"/>',
-	'xtk:srcSchema' : '<condition expr="@namespace||\':\'||@name = \'$KEY\'"/>',
+	'xtk:form' : NeoSync.queryConditionsNSNM,
+	'xtk:srcSchema' : NeoSync.queryConditionsNSNM,
 	'nms:delivery' : '<condition expr="@internalName = \'$KEY\'"/>',
 	'nms:includeView' : '<condition expr="@name = \'$KEY\'"/>',
 	'ncm:content' : '<condition expr="@name = \'$KEY\'"/>'
@@ -738,7 +745,7 @@ NeoSync.prototype.processFetch = function(resolve, reject, fetch){
 		}
 		catch(error)
 		{
-			console.log("processFetch error ", error, reject);
+			console.log("processFetch error ", error, this.nFetch);
 			reject( error );
 		}
 };
@@ -774,7 +781,9 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
   				}
 
   			var resultContent = "";
-  			//console.log("result : ",  result );
+  			//console.log("RAW",raw);
+
+  			//console.log("result : ",  result.pdomOutput.delivery.content );
   			//this = nFetch (via .bind(nFetch))
   			try{
 		  		switch( this.nFetch.schema )
