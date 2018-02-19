@@ -8,7 +8,31 @@ var fs = require('fs'),
 	pd = require('pretty-data').pd,
 	dateFormat = require('dateformat'),
 	FormData = require('form-data'),
-	keypress = require('keypress');
+	keypress = require('keypress'),
+
+  	SoapHttpClient = require('./node_modules/soap/lib/http'); //Pour surcharge
+	//Surcharge de la méthode handleResponse car suppression des commentaire ???
+	SoapHttpClient.prototype.handleResponse = function(req, res, body) {
+	  //debug('Http response body: %j', body);
+	  if (typeof body === 'string') {
+	    // Remove any extra characters that appear before or after the SOAP
+	    // envelope.
+	    /*
+	    var match =
+	      body.replace(/<!--[\s\S]*?-->/, "").match(/(?:<\?[^?]*\?>[\s]*)?<([^:]*):Envelope([\S\s]*)<\/\1:Envelope>/i);
+	      */
+	    var match =
+	      body.match(/(?:<\?[^?]*\?>[\s]*)?<([^:]*):Envelope([\S\s]*)<\/\1:Envelope>/i);
+	    if (match) {
+	      body = match[0];
+	    }
+	  }
+	  return body;
+	};
+
+var currentDb = {
+	stringConcat : '+'
+}
 
 PromiseCounter = 0;
 //console.log(Promise.prototype.toString);
