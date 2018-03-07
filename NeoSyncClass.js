@@ -368,17 +368,21 @@ NeoSync.prototype.processFile = function( filePath ){
 	catch( e ){
 			console.log( "NeoSync : echec de sauvegarde " + nFile.fileName );
 	}
-	this.pushAction( function( onLoad, onError ){
+	this.pushAction( function( contentToSend, onLoad, onError ){
 		this.soapWriterClient.Write({sessiontoken : NeoSync.config.sessionToken,
 									domDoc : {$xml : contentToSend} }, function(onLoad, err, result, raw, soapHeader) {
 		      		if(err)
-		      			{onError.bind(this)(); return;}
+		      			{
+		      				console.log("Error when sending content !!!" , err)
+		      				onError.bind(this)(); return;
+		      			}
+		      				console.log("Content Sent!!!" , raw);
 		      		if(typeof this.onFileRefresh == "function")
 		      			this.onFileRefresh( {nFile : nFile, result : result, error : err} );
 		      		if( onLoad )
 		      			onLoad.bind(this)();
 				  }.bind(this,onLoad));
-	}.bind(this));
+	}.bind(this, contentToSend));
 };
 
 NeoSync.getXMLSourceFile = function( neoFile, content){
@@ -436,6 +440,7 @@ NeoSync.newFetches = new Array();
 NeoSync.watching = false;
 NeoSync.pushAll = false;
 NeoSync.initPattern = null;
+NeoSync.stopOnError = true;
 NeoSync.processArguments = function(){
 	for(var i in process.argv)
 		{
@@ -447,6 +452,8 @@ NeoSync.processArguments = function(){
 				NeoSync.watching = true;
 			if(['-pa','-pushall'].indexOf( process.argv[i].toLowerCase() ) != -1)
 				NeoSync.pushAll = true;
+			if(['-ns','-noStop'].indexOf( process.argv[i].toLowerCase() ) != -1)
+				NeoSync.stopOnError = false;
 			if(['-pattern'].indexOf( process.argv[i].toLowerCase() ) != -1 && process.argv.length > i)
 				NeoSync.filePattern = process.argv[ (parseInt(i)+1) ];
 			if(['-p','-push'].indexOf( process.argv[i].toLowerCase() ) != -1 && process.argv.length > i)
@@ -799,7 +806,7 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
   					}
   				catch(e){
   					console.log(e);
-  					if( onError )
+  					if( onError  && NeoSync.stopOnError)
   						onError.bind(this)();
   					}
   				}
@@ -828,7 +835,7 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
 			catch( error ){
 				console.log("ERROR FOR " + this.fetchQuery + ": " + error );
 				//console.log("__--**--__ ERROR with onError ? " , onError)
-				if( onError )
+				if( onError && NeoSync.stopOnError)
   					{
 					//console.log("__--**--__ I TRY onERROR() " , onError)
   						onError( error );
