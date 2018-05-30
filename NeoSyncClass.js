@@ -393,6 +393,7 @@ NeoSync.getXMLSourceFile = function( neoFile, content){
 		case 'js': xml = "<javascript xtkschema='xtk:javascript' name='"+ neoFile.xmlName +".js' namespace='"+ neoFile.nameSpace +"' ><data><![CDATA[$CONTENT]]></data></javascript>";break;
 		case 'jst': xml = "<jst xtkschema='xtk:jst' name='"+ neoFile.xmlName +"' namespace='"+ neoFile.nameSpace +"' ><code><![CDATA[$CONTENT]]></code></jst>";break;
 		case 'jssp': xml = "<jssp xtkschema='xtk:jssp' name='"+ neoFile.xmlName +".jssp' namespace='"+ neoFile.nameSpace +"' ><data><![CDATA[$CONTENT]]></data></jssp>";break;
+		case 'sql': xml = "<sql xtkschema='xtk:sql' name='"+ neoFile.xmlName +".jssp' namespace='"+ neoFile.nameSpace +"' ><data><![CDATA[$CONTENT]]></data></sql>";break;
 		case 'txt' : xml = "<delivery xtkschema='nms:delivery' internalName='"+ neoFile.internalName +"' _operation='update'><content><text><source><![CDATA[$CONTENT]]></source></text></content></delivery>";break;
 		case 'html' : xml = "<delivery xtkschema='nms:delivery' internalName='"+ neoFile.internalName +"' _operation='update'><content><html><source><![CDATA[$CONTENT]]></source></html></content></delivery>";break;
 		case 'iview.txt' : xml = "<includeView xtkschema='nms:includeView' name='"+ neoFile.internalName +"' _operation='update'><source><text><![CDATA[$CONTENT]]></text></source></includeView>";break;
@@ -694,6 +695,7 @@ NeoSync.querySelectors = {
 	'xtk:javascript' : '<node expr="data"/>',
 	'xtk:jst' : '<node expr="data"/>',
 	'xtk:jssp' : '<node expr="data"/>',
+	'xtk:sql' : '<node expr="data"/>',
 	'xtk:workflow' : '<node expr="data"/><node expr="@label"/><node expr="@internalName"/><node expr="@isModel"/><node expr="[/]"/><node expr="@showSQL"/><node expr="@keepResult"/><node expr="@schema"/><node expr="@recipientLink"/><node anyType="true" expr="script"/><node expr="@builtIn"/><node expr="@modelName"/><node expr="@form"/><node anyType="true" expr="variables"/>',
 	'xtk:form' : '<node expr="data"/><node expr="@xtkschema"/>',
 	'xtk:srcSchema' : '<node expr="data"/><node expr="@xtkschema"/>',
@@ -712,6 +714,7 @@ NeoSync.queryConditions = {
 	'xtk:javascript' : NeoSync.queryConditionsNSNM,
 	'xtk:jst' : NeoSync.queryConditionsNSNM,
 	'xtk:jssp' : NeoSync.queryConditionsNSNM,
+	'xtk:sql' : NeoSync.queryConditionsNSNM,
 	'xtk:workflow' : '<condition expr="@internalName = \'$KEY\'"/>',
 	'xtk:form' : NeoSync.queryConditionsNSNM,
 	'xtk:srcSchema' : NeoSync.queryConditionsNSNM,
@@ -802,6 +805,7 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
 						case 'xtk:javascript': result.pdomOutput.javascript = { data : raw.match(/<data><\!\[CDATA\[((?:.*\n.*)*)\]\]><\/data>/m)[1]}; break;
 						case 'xtk:jst': result.pdomOutput.jst = { code : raw.match(/<data><\!\[CDATA\[((?:.*\n.*)*)\]\]><\/data>/m)[1]};; break;
 						case 'xtk:jssp': result.pdomOutput.jssp = { data : raw.match(/<data><\!\[CDATA\[((?:.*\n.*)*)\]\]><\/data>/m)[1]};; break;
+						case 'xtk:sql': result.pdomOutput.sql = { data : raw.match(/<data><\!\[CDATA\[((?:.*\n.*)*)\]\]><\/data>/m)[1]};; break;
 						}
   					}
   				catch(e){
@@ -822,6 +826,7 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
 					case 'xtk:javascript': resultContent = result.pdomOutput.javascript.data; break;
 					case 'xtk:jst': resultContent = result.pdomOutput.jst.code; break;
 					case 'xtk:jssp': resultContent = result.pdomOutput.jssp.data; break;
+					case 'xtk:sql': resultContent = result.pdomOutput.sql.data; break;
 					case 'xtk:workflow': resultContent = pd.xml(raw.match(/(<workflow[\s\S]*<\/workflow>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>");break;
 					case 'xtk:form': resultContent = pd.xml(raw.match(/(<form[\s\S]*<\/form>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>");break;
 					case 'xtk:srcSchema': resultContent = pd.xml(raw.match(/(<srcSchema[\s\S]*<\/srcSchema>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>");break;
@@ -863,6 +868,7 @@ NeoSync.createFetchedFile = function (nFetch, content){
 				case 'xtk:javascript': fileName+=''; break;
 				case 'xtk:jst': fileName+='.jst'; break;
 				case 'xtk:jssp': fileName+=''; break;
+				case 'xtk:sql': fileName+='.sql'; break;
 				case 'nms:delivery': fileName += nFetch.specificKey == "html" ? '.html' : nFetch.specificKey == "txt" ? '.txt' : '.xml';
 				 break;
 				case 'nms:includeView': fileName += nFetch.specificKey == "html" ? '.iview.html' : nFetch.specificKey == "txt" ? '.iview.txt' : '.xml';
@@ -925,6 +931,8 @@ NeoSync.getFetchFromFile = function( fileName ){
 		schema = 'xtk:jst';
 	else if( nFile.extension == "jssp" )
 		schema = 'xtk:jssp';
+	else if( nFile.extension == "sql" )
+		schema = 'xtk:sql';
 	else if( nFile.extension == "iview.txt" || nFile.extension == "iview.html")
 		schema = 'nms:includeView';
 	else if( nFile.extension == "txt" || nFile.extension == "html")
@@ -938,10 +946,11 @@ NeoSync.getFetchFromFile = function( fileName ){
 		case 'xtk:javascript' : pk = nFile.internalName.replace(/_/,':'); break;
 		case 'xtk:jst' : pk = nFile.internalName.replace(/_/,':'); break;
 		case 'xtk:jssp' : pk = nFile.internalName.replace(/_/,':'); break;
+		case 'xtk:sql' : pk = nFile.internalName.replace(/_/,':'); break;
 		default : pk = nFile.internalName;
 		}
 
-	if( nFile.extension == "js" || nFile.extension == "jssp")
+	if( nFile.extension == "js" || nFile.extension == "jssp" || nFile.extension == "sql")
 		specificKey += "." + nFile.extension;
 
 	if( nFile.extension == "iview.txt" || nFile.extension == "txt")
