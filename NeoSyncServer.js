@@ -18,7 +18,7 @@ NeoSyncServer = function(){
 	this.socket = require('socket.io')(this.httpServer);
 	//this.testNeo = new NeoSync({ watch : true, onFileRefresh : this.onFileRefresh.bind(this) });
 	//Init pour obtenir les informations
-	NeoSync.initConfiguration();
+	NeoSync.initGlobalConfiguration();
 	NeoSyncServer.initConfiguration();
 	
 	this.currentPath = process.cwd() +  path.sep;

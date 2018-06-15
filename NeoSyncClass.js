@@ -59,13 +59,14 @@ process.on('unhandledRejection', (reason, p) => {
 function NeoSync( options ){
 	options = options || {};
 	//console.log( "NeoSync.config ? ", NeoSync.config)
-	if(typeof NeoSync.config == "undefined" )
-		NeoSync.initConfiguration();
+	if(typeof this.config == "undefined" )
+		this.initConfiguration();
 	this.directory = options.directory || process.cwd();
-	this.watching = options.watch || false;
+	//this.watching = options.watch || false;
 	this.pushAll = options.pushAll || false;
 	this.filePattern = options.filePattern || false;
 	this.fetch = options.fetch || "";
+	this.push = options.push || "";
 	this.onFileRefresh = options.onFileRefresh || null;
 	this.onFetchDone = options.onFetchDone || null;
 	this.watchInPause = false;
@@ -87,26 +88,29 @@ function NeoSync( options ){
 	//console.log("Adding addClientsTokensHeaders");
 	this.pushAction( this.addClientsTokensHeaders, true );
 
-	if(options.push)
+	/*
+	if( this.push != "" )
 		{
 			//this.changeTriggered( options.push );
 			//this.mainWorkflow = this.mainWorkflow.then( function(resolve, reject){return new Promise( function(push, resolve, reject){this.changeTriggered(push); resolve();}.bind(this, options.push))}.bind(this));
-			
-			this.pushAction( this.changeTriggered, true, options.push );
+			if( this.push.constructor == Array )
+				this.push.forEach(function(currentPush){ this.pushAction( this.changeTriggered, true, currentPush ); }.bind(this));
+			else
+				this.pushAction( this.changeTriggered, true, this.push );
 			return this;
 		}
-	if( this.fetch != "")
+	if( this.fetch != "" )
 		{
 			//this.processFetch( this.fetch );
 			//this.mainWorkflow = this.mainWorkflow.then( function(resolve, reject){return new Promise( function(resolve, reject){this.processFetch( this.fetch ); resolve();}.bind(this))}.bind(this));
 			//console.log("Adding processFetch");
-			this.pushAction( this.processFetch, false, this.fetch );
+			if( this.fetch.constructor == Array )
+				this.fetch.forEach(function(fetch){ this.pushAction( this.processFetch, false, fetch ); }.bind(this));
+			else
+				this.pushAction( this.processFetch, false, this.fetch );
 			return this; //fin du traitement
 		}
-
-	var pattern = "";
-	if(this.filePattern)
-		pattern = path.sep + this.filePattern;
+	*/
 
 	//Watcher
 	/*
@@ -131,56 +135,8 @@ function NeoSync( options ){
 	*/
 
 
-
-		//console.log("I will watch")
-	//this.pushAction( 
-
 	//Pacth : If no watching, and no Push All, then stop now
-		if(!this.watching && !this.pushAll )
-			return this;
-
-		var launchWatcher = function( onFinish ){
-			console.log("I wanna watch :", this.watching);
-			this.watcher = chokidar.watch(this.directory + pattern, {ignored: /^\./, persistent: true});
-			this.watcher
-			  .on('change', this.changeTriggered.bind(this) )
-			  .on('error', function(error) { console.log('NeoSync Erreur', error); onFinish(); });
-			  //.on('ready', function() {  }.bind(this));
-			if( this.pushAll )
-				this.watcher.on('add', this.changeTriggered.bind(this) );
-
-			if( !this.watching 
-)				this.watcher
-			  		.on('ready', function() { this.watcher.close(); onFinish(); }.bind(this));
-			 else
-				{
-				this.watcher
-		  			.on('ready', function() { this.watcher.on('add', this.changeTriggered.bind(this) ); }.bind(this));
-		  		console.log("Watching directory", this.directory + pattern)
-				keypress(process.stdin);
-				console.log("Press Any Key Top Stop")
-				process.stdin.on('keypress', function (onFinish, ch, key) {
-					  //console.log('got "keypress"', key);
-					  /*
-					  if (key && key.ctrl && key.name == 'c') {
-					    process.stdin.pause();
-					  }
-					  */
-					  process.stdin.pause();
-					  this.watcher.close();
-					  onFinish();
-					}.bind( this, onFinish ));
-				process.stdin.setRawMode(true);
-				process.stdin.resume();
-				}
-			}.bind(this);
-	this.watcherWorklfow = this.mainWorkflow.then(
-		function(actionFunction, args, resolve, reject){
-			//console.log(resolve)
-			//console.log("Push 9999 Promise Action sync ? ", sync, actionFunction );
-			return new Promise( function(resolve, reject){ launchWatcher( resolve, reject ) });
-		}
-	);
+		
 	//}.bind(this), false );
  		/*
 	 var promise = new Promise((resolve, reject) => {
@@ -216,6 +172,7 @@ NeoSync.prototype.pushAction = function( actionFunction, sync, args ){
 
 	this.mainWorkflow.catch( ( error )  => { //console.log( "Error on a process ",error )
 		NeoSync.displayError( "Error on a process\n" + JSON.stringify( error , null, 1).replace(/{|}/g,'') );
+		console.log( error );
 		});
 	}
 
@@ -228,9 +185,9 @@ NeoSync.prototype.pushAction = function( actionFunction, sync, args ){
 			//console.log(resolve)
 			//console.log("Push 9999 Promise Action sync ? ", sync, actionFunction );
 			var np = new Promise( function(actionFunction, args, resolve, reject){
-				//console.log("I run asynchronous function : ", actionFunction);
-					//console.log("I run Aynchronous function,", this.name, actionFunction);
-					actionFunction.bind(this)( resolve, reject, args );
+				//console.log("I run asynchronous function : ", actionFunction, (new String(args)).substr(0,1500));
+					//nsole.log("I run Aynchronous function,", actionFunction, (new String(args)).substr(0,15));
+					actionFunction.bind(this)( args, resolve, reject  );
 			}.bind(this, actionFunction, args ) );
 			return np;
 		}.bind(this, actionFunction, args ) 
@@ -238,6 +195,7 @@ NeoSync.prototype.pushAction = function( actionFunction, sync, args ){
 
 	this.mainWorkflow.catch( ( error )  => { //console.log( "Error on a process ",error )
 		NeoSync.displayError( "Error on a process\n" + JSON.stringify( error , null, 1).replace(/{|}/g,'') );
+		console.log( error );
 		});
 	}
 	this.mainWorkflow.identifier = PromiseCounter++;
@@ -252,7 +210,7 @@ NeoSync.prototype.getPromises = function(){
 
 NeoSync.prototype.loadWriteClient = function( onLoaded, onError, logonRequest ){
 	//LOADWRITECLIENT
-	soap.createClient(NeoSync.config.xtkSessionWSDL, {endpoint : NeoSync.config.server + "/nl/jsp/soaprouter.jsp"},function(onLoaded, onError, err, client) {
+	soap.createClient(NeoSync.config.xtkSessionWSDL, {endpoint : this.config.server + "/nl/jsp/soaprouter.jsp"},function(onLoaded, onError, err, client) {
 	//console.log("got the Soap Client and resolve is ", typeof onLoaded);
 				if( err &&  onError)
 					{
@@ -266,8 +224,8 @@ NeoSync.prototype.loadWriteClient = function( onLoaded, onError, logonRequest ){
 
 };
 
-NeoSync.prototype.loadFetchClient = function( onLoaded, onError ){
-	soap.createClient(NeoSync.config.xtkQueryDefWSDL, {endpoint : NeoSync.config.server + "/nl/jsp/soaprouter.jsp", preserveWhitespace : true},function(onLoaded, onError, err, client) {
+NeoSync.prototype.loadFetchClient = function( args, onLoaded, onError ){
+	soap.createClient(NeoSync.config.xtkQueryDefWSDL, {endpoint : this.config.server + "/nl/jsp/soaprouter.jsp", preserveWhitespace : true},function(onLoaded, onError, err, client) {
 		//console.log("******* got the soapQueryClient Soap Client and this is ", this);
 				if( err &&  onError)
 					{
@@ -284,24 +242,29 @@ NeoSync.prototype.loadFetchClient = function( onLoaded, onError ){
 NeoSync.prototype.getSecurityToken = function( onLoaded, onError ){
 	//console.log("getSecurityToken");
     if(!this.soapQueryClient)
-    	this.loadWriteClient( this.sendSecurityLogon.bind( this, onLoaded ), onError, true );
+    	this.loadWriteClient( this.sendSecurityLogon.bind( this, null,  onLoaded ), onError, true );
     else
-    	this.sendSecurityLogon(onLoaded, onError);
+    	this.sendSecurityLogon(null, onLoaded, onError);
 };
 
-NeoSync.prototype.sendSecurityLogon = function( onLoaded, onError ){
+NeoSync.prototype.sendSecurityLogon = function( args, onLoaded, onError ){
 	this.soapWriterClient.Logon({sessiontoken : "",
-							 strLogin :  NeoSync.config.userName ,
-							 strPassword : NeoSync.config.userPwd ,
+							 strLogin :  this.config.userName ,
+							 strPassword : this.config.userPwd ,
 							 elemParameters : ""}, function(onLoaded, onError, err, result, raw, soapHeader) {
       		if(err)
       			{
       			onError( err );
       			return
       			}
-
-      		this.securityToken = result.pstrSecurityToken.$value;
-      		NeoSync.config.sessionToken = result.pstrSessionToken.$value;
+      		try{
+	      		this.securityToken = result.pstrSecurityToken.$value;
+      		}
+      		catch ( e )
+      		{
+      			this.securityToken = "";
+      		}
+	      	this.config.sessionToken = result.pstrSessionToken.$value;
       		if(typeof onLoaded == "function")
       			onLoaded.bind(this)("sendSecurityLogon done");
 		  }.bind(this, onLoaded, onError));
@@ -312,9 +275,9 @@ NeoSync.prototype.addClientsTokensHeaders = function( args, resolve, reject ){
 	//addClientsTokensHeaders
 		try{
 					this.soapQueryClient.addHttpHeader('X-Security-Token', this.securityToken);
-					this.soapQueryClient.addHttpHeader('cookie',  "__sessiontoken=" + NeoSync.config.sessionToken);
+					this.soapQueryClient.addHttpHeader('cookie',  "__sessiontoken=" + this.config.sessionToken);
 					this.soapWriterClient.addHttpHeader('X-Security-Token', this.securityToken);
-					this.soapWriterClient.addHttpHeader('cookie',  "__sessiontoken=" + NeoSync.config.sessionToken);
+					this.soapWriterClient.addHttpHeader('cookie',  "__sessiontoken=" + this.config.sessionToken);
 				//console.log('HEHE jai les tokens',args);
 				resolve("ClientsTokensHeaders added");
 			}
@@ -322,11 +285,18 @@ NeoSync.prototype.addClientsTokensHeaders = function( args, resolve, reject ){
 			reject( err );
 		}
 }
-
-NeoSync.prototype.changeTriggered = function( filePath ){
+NeoSync.prototype.execPush = function( resolve, reject, push ){
+	if( push.constructor == Array )
+		push.forEach(function(currentPush){ this.pushAction( this.changeTriggered, true, currentPush ); }.bind(this));
+	else
+		this.pushAction( this.changeTriggered, true, push );
+	return this;
+}
+NeoSync.prototype.changeTriggered = function( filePath, onLoaded, onError ){
 	if(this.watchInPause)
 		return true;
 	console.log("changeTriggered = " + filePath );
+	//NeoSync.displayCartouche(["changeTriggered = " + filePath ]);
 	//this.currentFilePath = path;
     if(!this.soapQueryClient)
     	this.loadWriteClient( this.processFile.bind( this, filePath ) );
@@ -334,13 +304,63 @@ NeoSync.prototype.changeTriggered = function( filePath ){
     	this.processFile(filePath);
 
 };
+
+NeoSync.prototype.execWatch = function( resolve, reject, watching ){
+	var pattern = "";
+	if(this.filePattern)
+		pattern = path.sep + this.filePattern;
+	var launchWatcher = function( onFinish ){
+		console.log("I wanna watch :", watching);
+		this.watcher = chokidar.watch(this.directory + pattern, {ignored: /^\./, persistent: true});
+		this.watcher
+		  .on('change', this.changeTriggered.bind(this) )
+		  .on('error', function(error) { console.log('NeoSync Erreur', error); onFinish(); });
+		  //.on('ready', function() {  }.bind(this));
+		if( this.pushAll )
+			this.watcher.on('add', this.changeTriggered.bind(this) );
+
+		if( !watching )				
+			this.watcher
+		  		.on('ready', function() { this.watcher.close(); onFinish(); }.bind(this));
+		 else
+			{
+			this.watcher
+	  			.on('ready', function() { this.watcher.on('add', this.changeTriggered.bind(this) ); }.bind(this));
+	  		console.log("Watching directory", this.directory + pattern)
+			keypress(process.stdin);
+			console.log("Press Any Key Top Stop")
+			process.stdin.on('keypress', function (onFinish, ch, key) {
+				  //console.log('got "keypress"', key);
+				  /*
+				  if (key && key.ctrl && key.name == 'c') {
+				    process.stdin.pause();
+				  }
+				  */
+				  process.stdin.pause();
+				  this.watcher.close();
+				  onFinish();
+				}.bind( this, onFinish ));
+			process.stdin.setRawMode(true);
+			process.stdin.resume();
+			}
+		}.bind(this);
+	this.watcherWorklfow = this.mainWorkflow.then(
+		function(actionFunction, args, resolve, reject){
+			//console.log(resolve)
+			//console.log("Push 9999 Promise Action sync ? ", sync, actionFunction );
+			return new Promise( function(resolve, reject){ launchWatcher( resolve, reject ) });
+		}
+	);
+	return this;
+}
+
 NeoSync.prototype.pauseWatch = function(){
 	this.watchInPause = true;
 };
 NeoSync.prototype.playWatch = function(){
 	this.watchInPause = false;
 };
-NeoSync.sourcesFilesExt = ['js','jst','jssp','txt','html','iview.txt','iview.html'];
+NeoSync.sourcesFilesExt = ['js','jst','jssp','txt','html','sms.txt','iview.txt','iview.html'];
 NeoSync.standardFilesExt = ['txt','html','iview.txt','iview.html'];
 NeoSync.prototype.processFile = function( filePath ){
 	//var filePath = this.currentFilePath;
@@ -350,39 +370,42 @@ NeoSync.prototype.processFile = function( filePath ){
 	if(nFile.fileName.indexOf('.') == 0)
 		return true;
 	//SECURITE : Mode non développeur (serveur != de la dev) et fichier de developpement, on sort
-	if(NeoSync.config.mode == 'standard' && NeoSync.standardFilesExt.indexOf( nFile.extension ) == -1)
+	if(this.config.mode == 'standard' && NeoSync.standardFilesExt.indexOf( nFile.extension ) == -1)
 		return true;
 
 	if( NeoSync.sourcesFilesExt.indexOf( nFile.extension ) != -1 )
 		contentToSend = NeoSync.getXMLSourceFile( nFile, contentFile );
 	else if( nFile.extension.toLowerCase() == 'xml')
 		contentToSend = contentFile;
-	console.log( "NeoSync : envoi du contenu de " + nFile.fileName );
+	NeoSync.displayCartouche([ "NeoSync : envoi du contenu de " + nFile.fileName ]);
 
 	//console.log( contentToSend );
 
-	var conf = NeoSync.config;
+	var conf = this.config;
 	try{
 		this.backup( NeoSync.getFetchFromFile( filePath ) );
 	}
 	catch( e ){
 			console.log( "NeoSync : echec de sauvegarde " + nFile.fileName );
 	}
-	this.pushAction( function( contentToSend, onLoad, onError ){
-		this.soapWriterClient.Write({sessiontoken : NeoSync.config.sessionToken,
+	this.pushAction( function( contentToSend, onLoad, onError  ){
+		//console.log('onLoad : ' + onLoad);
+		//console.log('onError : ' + onError);
+		//console.log('----contentToSend : ' + (new String(contentToSend)).substr(0,1000));
+		this.soapWriterClient.Write({sessiontoken : this.config.sessionToken,
 									domDoc : {$xml : contentToSend} }, function(onLoad, err, result, raw, soapHeader) {
 		      		if(err)
 		      			{
-		      				console.log("Error when sending content !!!" , err)
+		      				console.log("Error when sending content !!!" , result)
 		      				onError.bind(this)(); return;
 		      			}
-		      				console.log("Content Sent!!!" , raw);
+		      				//console.log("Content Sent!!!" , raw);
 		      		if(typeof this.onFileRefresh == "function")
 		      			this.onFileRefresh( {nFile : nFile, result : result, error : err} );
 		      		if( onLoad )
 		      			onLoad.bind(this)();
 				  }.bind(this,onLoad));
-	}.bind(this, contentToSend));
+	}.bind(this), false, contentToSend);
 };
 
 NeoSync.getXMLSourceFile = function( neoFile, content){
@@ -394,6 +417,7 @@ NeoSync.getXMLSourceFile = function( neoFile, content){
 		case 'jst': xml = "<jst xtkschema='xtk:jst' name='"+ neoFile.xmlName +"' namespace='"+ neoFile.nameSpace +"' ><code><![CDATA[$CONTENT]]></code></jst>";break;
 		case 'jssp': xml = "<jssp xtkschema='xtk:jssp' name='"+ neoFile.xmlName +".jssp' namespace='"+ neoFile.nameSpace +"' ><data><![CDATA[$CONTENT]]></data></jssp>";break;
 		case 'sql': xml = "<sql xtkschema='xtk:sql' name='"+ neoFile.xmlName +".jssp' namespace='"+ neoFile.nameSpace +"' ><data><![CDATA[$CONTENT]]></data></sql>";break;
+		case 'sms.txt' : xml = "<delivery xtkschema='nms:delivery' internalName='"+ neoFile.internalName +"' _operation='update'><content><sms><source><![CDATA[$CONTENT]]></source></sms></content></delivery>";break;
 		case 'txt' : xml = "<delivery xtkschema='nms:delivery' internalName='"+ neoFile.internalName +"' _operation='update'><content><text><source><![CDATA[$CONTENT]]></source></text></content></delivery>";break;
 		case 'html' : xml = "<delivery xtkschema='nms:delivery' internalName='"+ neoFile.internalName +"' _operation='update'><content><html><source><![CDATA[$CONTENT]]></source></html></content></delivery>";break;
 		case 'iview.txt' : xml = "<includeView xtkschema='nms:includeView' name='"+ neoFile.internalName +"' _operation='update'><source><text><![CDATA[$CONTENT]]></text></source></includeView>";break;
@@ -406,7 +430,7 @@ NeoSync.getXMLSourceFile = function( neoFile, content){
 };
 NeoSync.File = function( filePath ){
 	var extensionReg = /\.([^.]*$)/;
-	var specialExtensionReg = /\.((?:iview|bloc)\.[^.]*$)/;
+	var specialExtensionReg = /\.((?:iview|bloc|sms)\.[^.]*$)/;
 	var fileExtension = "";
 	var fileNameReg = "\\" + path.sep + "([^\\" + path.sep + "]*$)";
 	var fileName = "";
@@ -441,7 +465,7 @@ NeoSync.newFetches = new Array();
 NeoSync.watching = false;
 NeoSync.pushAll = false;
 NeoSync.initPattern = null;
-NeoSync.stopOnError = true;
+NeoSync.stopOnError = false;
 NeoSync.processArguments = function(){
 	for(var i in process.argv)
 		{
@@ -457,8 +481,12 @@ NeoSync.processArguments = function(){
 				NeoSync.stopOnError = false;
 			if(['-pattern'].indexOf( process.argv[i].toLowerCase() ) != -1 && process.argv.length > i)
 				NeoSync.filePattern = process.argv[ (parseInt(i)+1) ];
+			/*
 			if(['-p','-push'].indexOf( process.argv[i].toLowerCase() ) != -1 && process.argv.length > i)
 				NeoSync.processPushes( process.argv[ (parseInt(i)+1) ] );
+			*/
+			if(['-p','-push'].indexOf( process.argv[i].toLowerCase() ) != -1 && process.argv.length > i)
+				NeoSync.newPushes = NeoSync.processPushes( process.argv[ (parseInt(i)+1) ] );
 		}
 	
 	if( NeoSync.directories.length == 0)
@@ -478,6 +506,9 @@ NeoSync.processDirectories = function( argument ){
 		}
 	return directories;
 };
+
+
+
 NeoSync.processFetches = function( argument ){
 	//PROCESS FETCHES
 	var args = argument.split(";");
@@ -501,13 +532,14 @@ NeoSync.processPushes = function( argument ){
 				file = process.cwd() + path.sep + args[i];
 			else
 				file =  args[i];
-		var ns = new NeoSync({ push : file });
+		//var ns = new NeoSync({ push : file });
+			files.push( file );
 		}
-	//return files;
+	return files;
 };
 
 NeoSync.configFile = getUserHome() + path.sep + 'NeoSync' + path.sep + 'neoSync.conf';
-NeoSync.initConfiguration = function(){
+NeoSync.prototype.initConfiguration = function(){
 	var initFile = NeoSync.configFile;
 	//console.log( initFile );
 	try{
@@ -517,20 +549,21 @@ NeoSync.initConfiguration = function(){
 		console.log( "NeoSync Erreur au chargement de la config : " + err);
 		throw "NeoSync Config Read Error";
 	}
-	NeoSync.config = JSON.parse( configLines );
-	NeoSync.config.sessionToken = NeoSync.config.userName + "/" + NeoSync.config.userPwd;
+	this.config = JSON.parse( configLines );
+	this.config.sessionToken = this.config.userName + "/" + this.config.userPwd;
+	this.config.mode = 'standard';
+	this.config.configFileName = path.basename(initFile);
+	if( this.config.devMode == 1 )
+		this.config.mode = 'dev';
+	this.displayWelcome();
+};
+
+NeoSync.initGlobalConfiguration = function(){
+	NeoSync.config = new Object();
 	NeoSync.config.xtkSessionWSDL = getUserHome() + path.sep + 'NeoSync' + path.sep + 'wsdl_xtksession.xml';
 	NeoSync.config.xtkQueryDefWSDL = getUserHome() + path.sep + 'NeoSync' + path.sep + 'wsdl_xtkquerydef.xml';
-	NeoSync.config.mode = 'standard';
-	NeoSync.config.configFileName = path.basename(initFile);
-	if( NeoSync.config.devMode == 1 )
-		NeoSync.config.mode = 'dev';
+}
 
-
-	NeoSync.displayWelcome();
-
-
-};
 NeoSync.getConfigurations = function(){
 	var confDir = getUserHome() + path.sep + 'NeoSync' + path.sep ;
 	var files = fs.readdirSync(confDir);
@@ -544,33 +577,49 @@ NeoSync.getConfigurations = function(){
 	return confFiles;
 };
 NeoSync.startService = function(){
-	NeoSync.initConfiguration();
+	//NeoSync.initConfiguration();
+	NeoSync.initGlobalConfiguration();
 
 	var allPromises = new Array();
+	var neoSync = null;
 
-	NeoSync.directories.forEach(function(directory){
-		var neoSync = new NeoSync({ directory : directory, watch : NeoSync.watching, pushAll : NeoSync.pushAll, filePattern : NeoSync.filePattern });
-		var promise = neoSync.getPromises()
-		//console.log(promise, promise.toString() );
+	if(NeoSync.watching || NeoSync.pushAll)
+	{
+		NeoSync.directories.forEach(function(directory){
+			var neoSync = new NeoSync({ directory : directory, pushAll : NeoSync.pushAll, filePattern : NeoSync.filePattern });
+			neoSync.execWatch(null,null, NeoSync.watching);
+			var promise = neoSync.getPromises()
+			//console.log(promise, promise.toString() );
+			allPromises = allPromises.concat( promise );
+		});
+	}
+	if( !neoSync )
+		neoSync = new NeoSync();
+	
+	if( NeoSync.newFetches && NeoSync.newFetches.length > 0 ){
+		//neoSync = new NeoSync({ fetch : NeoSync.newFetches});
+		neoSync.execFetch( null, null, NeoSync.newFetches);
+		var promise = neoSync.getPromises();
 		allPromises = allPromises.concat( promise );
-	});
-	NeoSync.newFetches.forEach(function(fetch){
-		var neoSync = new NeoSync({ fetch : fetch});
-		var promise = neoSync.getPromises()
-		//console.log(promise, promise.toString() );
+	}
+
+	if( NeoSync.newPushes && NeoSync.newPushes.length > 0 ){
+		//neoSync = new NeoSync({ push : NeoSync.newPushes});
+		neoSync.execPush( null, null, NeoSync.newPushes);
+		var promise = neoSync.getPromises();
 		allPromises = allPromises.concat( promise );
-	});
+	}
 
 	Promise.all( allPromises ).then(function(values){		
 		//return new Promise( (resolve, reject ) => {				
 			//console.log("HEHOOOO J'AI FINI",values)
-			NeoSync.displayGoodBye();
+			neoSync.displayGoodBye();
 		//});
 	})
 	.catch(function(values){		
 		//return new Promise( (resolve, reject ) => {				
 			//console.log("HEHOOOO J'AI FINI",values)
-			NeoSync.displayGoodBye();
+			neoSync.displayGoodBye();
 		//});
 	});
 	
@@ -603,7 +652,7 @@ var colors = {
 		BgCyan : "\x1b[46m",
 		BgWhite : "\x1b[47m"
 	}
-NeoSync.displayWelcome = function(){
+NeoSync.prototype.displayWelcome = function(){
 	var str = {
 		Entete : "------******------",
 		logo1  : colors.cyan + "      █║    ▄██║                                                   "+colors.white,
@@ -619,16 +668,16 @@ NeoSync.displayWelcome = function(){
 		logo11 : colors.cyan + "                                             ▄▀                    "+colors.white,
 		logo12 : colors.cyan + "                                           ▄▀▀                     "+colors.white,
 		logo13 : colors.cyan + "  +------------------------------------>  ▄▀   +------------------>"+colors.white,
-		Hello :  "Hello  " + NeoSync.config.userName,
-		Welcome : "Welcome to NeoSync, link bettwen you and " + NeoSync.config.server,
+		Hello :  "Hello  " + this.config.userName,
+		Welcome : "Welcome to NeoSync, link bettwen you and " + this.config.server,
 		Footer : "___________--******--___________"
 	}
 	NeoSync.displayCartouche( str );
 }
-NeoSync.displayGoodBye = function(){
+NeoSync.prototype.displayGoodBye = function(){
 	var str = {
 		Entete : "------  *  ------",
-		bye :  "Good Bye " + NeoSync.config.userName,
+		bye :  "Good Bye " + this.config.userName,
 		close : "Connection closed",
 		Entete2 : "------  *  ------",
 		bye1 : "♦─"+colors.cyan +"▄█▀▀║░▄█▀▄║▄█▀▄║██▀▄║"+colors.white +"─♦",
@@ -655,22 +704,24 @@ NeoSync.displayCartouche = function( str /*Object*/){
 
 	var screenLength = 150;
 	var sll = {};
+
 	for(var k in str)
 		{
-			sll[k] =  2 * Math.round( (screenLength - (str[k].replace(/\x1b\[[0-9]*m/g,"")).length) / 2); 
+			sll[k] =  2 * Math.round( (Math.max(screenLength - (str[k].replace(/\x1b\[[0-9]*m/g,"")).length,0)) / 2); 
 			//console.log(str[k], str[k].replace(/\x1b\[[0-9]*m/g,"").replace(/─/g,"*"))
 		}
 		//sll[k] = 2 * Math.round( (screenLength - str[k].replace(/\\x1b\[[0-9;]*m/g,"").length) / 2); //Pour avoir un chiffre rond
 
-	var cfNamelength = NeoSync.config.userName.toString().length;
+	//var cfNamelength = NeoSync.config.userName.toString().length;
 	//console.log(" ");
 	//console.log(" ");
 	console.log(colors.FgYellow+"╔"+ Array(screenLength+1).join("═") +"╗"+colors.Reset);
 	
 	for(var k in str)
 		{ 
+			//console.log("sll[k] : ",sll[k]);
 		var p1 = Array((sll[k]/2)+1).join(" "), 
-			l2 = screenLength - p1.length - str[k].replace(/\x1b\[[0-9]*m/g,"").length, 
+			l2 = Math.max(screenLength - p1.length - str[k].replace(/\x1b\[[0-9]*m/g,"").length,0), 
 			p2 = Array(l2+1).join(" ");
 		console.log(cols + p1 +  str[k]  + p2 + cols );
 		}
@@ -696,7 +747,7 @@ NeoSync.querySelectors = {
 	'xtk:jst' : '<node expr="data"/>',
 	'xtk:jssp' : '<node expr="data"/>',
 	'xtk:sql' : '<node expr="data"/>',
-	'xtk:workflow' : '<node expr="data"/><node expr="@label"/><node expr="@internalName"/><node expr="@isModel"/><node expr="[/]"/><node expr="@showSQL"/><node expr="@keepResult"/><node expr="@schema"/><node expr="@recipientLink"/><node anyType="true" expr="script"/><node expr="@builtIn"/><node expr="@modelName"/><node expr="@form"/><node anyType="true" expr="variables"/>',
+	'xtk:workflow' : '<node expr="data"/><node expr="@label"/><node expr="@internalName"/><node expr="@isModel"/><node expr="[/]"/><node expr="@showSQL"/><node expr="@keepResult"/><node expr="@schema"/><node expr="@recipientLink"/><node anyType="true" expr="script"/><node expr="@builtIn"/><node expr="@modelName"/><node expr="@form"/><node anyType="true" expr="variables"/><node expr="\'xtk:workflow\'" alias="@xtkschema"/>',
 	'xtk:form' : '<node expr="data"/><node expr="@xtkschema"/>',
 	'xtk:srcSchema' : '<node expr="data"/><node expr="@xtkschema"/>',
 	//'nms:delivery' : '<node expr="data"/><node expr="@internalName"/><node expr="@isModel"/><node expr="@deliveryMode"/><node expr="@label"/><node expr="[folder/@name]"/><node expr="[folderProcess/@name]"/><node expr="[mapping/@name]"/><node expr="[typology/@name]"/><node expr="[operation/@internalName]"/><node expr="[deliveryProvider/@name]"/><node expr="@xtkschema"/>',
@@ -704,6 +755,7 @@ NeoSync.querySelectors = {
 	'nms:delivery' : '<node expr="data"/><node expr="@internalName"/><node expr="@isModel"/><node expr="@deliveryMode"/><node expr="@label"/><node expr="[folder/@name]"/><node expr="[folderProcess/@name]"/><node expr="[mapping/@name]"/><node expr="[typology/@name]"/><node expr="[deliveryProvider/@name]"/><node expr="@xtkschema"/>',
 	'nms:delivery_html' : '<node expr="[content/html/source]"/>',
 	'nms:delivery_txt' : '<node expr="[content/text/source]"/>',
+	'nms:delivery_sms' : '<node expr="[content/sms/source]"/>',
 	'nms:includeView' : '<node expr="data"/><node expr="@name"/><node expr="@label"/><node expr="[folder/@name]"/><node expr="\'nms:includeView\'" alias="@xtkschema"/>',
 	'nms:includeView_html' : '<node expr="[source/html]"/>',
 	'nms:includeView_txt' : '<node expr="[source/text]"/>',
@@ -728,8 +780,14 @@ NeoSync.onSoapQueryClientReady = function(){
 		var neoSync = new NeoSync({ directory : directory, fetch : fetch});
 	});
 };
-
-NeoSync.prototype.processFetch = function(resolve, reject, fetch){
+NeoSync.prototype.execFetch = function(resolve, reject, fetch){
+	if( fetch.constructor == Array )
+		fetch.forEach(function(currentFetch){ this.pushAction( this.processFetch, false, currentFetch ); }.bind(this));
+	else
+		this.pushAction( this.processFetch, false, fetch );
+	return this; //fin du traitement
+}
+NeoSync.prototype.processFetch = function(fetch, resolve, reject ){
 	//processFetch
 	//console.log("Hello, processFetch(",fetch, resolve, reject,")");
 	try{
@@ -780,13 +838,13 @@ NeoSync.prototype.processFetch = function(resolve, reject, fetch){
 		catch(error)
 		{
 			console.log("processFetch error ", error, this.nFetch);
-			reject( error );
+			//reject( error );
 		}
 };
 NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
 	//console.log("Try to send a query", this.soapQueryClient);
 
-	this.soapQueryClient.ExecuteQuery({sessiontoken : NeoSync.config.sessionToken,
+	this.soapQueryClient.ExecuteQuery({sessiontoken : this.config.sessionToken,
 						entity : {$xml : this.fetchQuery} }, function(onLoad, onError, err, result, raw, soapHeader) {
 						//console.log(NeoSync.config.sessionToken)
 						//console.log(err, result, raw, soapHeader);
@@ -797,6 +855,16 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
   				{
   				//console.log(this.nFetch.fetchName + " --> " + err + "\n query : " + this.fetchQuery);
   				//console.log("##### MY raw : " + raw);
+  				/*
+  				var backupDir = getUserHome() + path.sep + 'NeoSync'+ path.sep + 'BACKUP' ;  				
+  				if( this.nFetch.directory == backupDir)
+  				{ //Cas du backup, on ne lève pas l'erreur
+  					NeoSync.displayError("la ressource demandée ("+ this.nFetch.primaryKey +") n'existe pas pour le backup");
+  					if(onLoad)
+						onLoad();
+					return;
+  				}
+  				*/
   				try{
 	  				result = { pdomOutput : {} };
 	  				//result = { pdomOutput }
@@ -830,7 +898,7 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
 					case 'xtk:workflow': resultContent = pd.xml(raw.match(/(<workflow[\s\S]*<\/workflow>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>");break;
 					case 'xtk:form': resultContent = pd.xml(raw.match(/(<form[\s\S]*<\/form>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>");break;
 					case 'xtk:srcSchema': resultContent = pd.xml(raw.match(/(<srcSchema[\s\S]*<\/srcSchema>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>");break;
-					case 'nms:delivery': resultContent = this.nFetch.specificKey == "html" ? result.pdomOutput.delivery.content.html.source : this.nFetch.specificKey == "txt" ? result.pdomOutput.delivery.content.text.source : pd.xml(raw.match(/(<delivery[\s\S]*<\/delivery>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>"); break;
+					case 'nms:delivery': resultContent = this.nFetch.specificKey == "html" ? result.pdomOutput.delivery.content.html.source : this.nFetch.specificKey == "sms" ? result.pdomOutput.delivery.content.sms.source : this.nFetch.specificKey == "txt" ? result.pdomOutput.delivery.content.text.source : pd.xml(raw.match(/(<delivery[\s\S]*<\/delivery>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>"); break;
 					case 'nms:includeView': resultContent = this.nFetch.specificKey == "html" ? result.pdomOutput.includeView.source.html : this.nFetch.specificKey == "txt" ? result.pdomOutput.includeView.source.text : pd.xml(raw.match(/(<includeView[\s\S]*<\/includeView>)/)[1]).replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>"); break;
 					case 'ncm:content': realSchema = result.pdomOutput.content.attributes['publishing-name']; resultContent = pd.xml(raw.match(/(<content[\s\S]*<\/content>)/)[1]).replace(/^<content([\s\S]*)<\/content>$/,"<"+realSchema+"$1</"+realSchema+">").replace(/\n\s*<!\[CDATA/g,"<![CDATA").replace(/\]\]>\n\s*/g,"]]>"); break;
 
@@ -838,7 +906,8 @@ NeoSync.prototype.executeFetchQuery = function( onLoad, onError ){
 				NeoSync.createFetchedFile( this.nFetch, resultContent );
 			}
 			catch( error ){
-				console.log("ERROR FOR " + this.fetchQuery + ": " + error );
+				//console.log("ERROR FOR " + this.fetchQuery + ": " + error );
+				NeoSync.displayError("ERROR FOR " + this.nFetch.primaryKey + ":\n " + error )
 				//console.log("__--**--__ ERROR with onError ? " , onError)
 				if( onError && NeoSync.stopOnError)
   					{
@@ -869,7 +938,7 @@ NeoSync.createFetchedFile = function (nFetch, content){
 				case 'xtk:jst': fileName+='.jst'; break;
 				case 'xtk:jssp': fileName+=''; break;
 				case 'xtk:sql': fileName+='.sql'; break;
-				case 'nms:delivery': fileName += nFetch.specificKey == "html" ? '.html' : nFetch.specificKey == "txt" ? '.txt' : '.xml';
+				case 'nms:delivery': fileName += nFetch.specificKey == "html" ? '.html' : nFetch.specificKey == "sms" ? '.sms.txt' : nFetch.specificKey == "txt" ? '.txt' : '.xml';
 				 break;
 				case 'nms:includeView': fileName += nFetch.specificKey == "html" ? '.iview.html' : nFetch.specificKey == "txt" ? '.iview.txt' : '.xml';
 				 break;
@@ -878,7 +947,7 @@ NeoSync.createFetchedFile = function (nFetch, content){
 	//console.log(content);
 	fs.writeFileSync(nFetch.directory + path.sep + fileName, content);
 
-	console.log(nFetch.directory + path.sep + fileName + " ecrit sur le disque");
+	NeoSync.displayCartouche([nFetch.directory + path.sep + fileName + " ecrit sur le disque"]);
 };
 NeoSync.FetchRequest = function( fetchPath ){
 	var fetchNameReg = "\\" + path.sep + "([^\\" + path.sep + "]*$)";
@@ -935,7 +1004,7 @@ NeoSync.getFetchFromFile = function( fileName ){
 		schema = 'xtk:sql';
 	else if( nFile.extension == "iview.txt" || nFile.extension == "iview.html")
 		schema = 'nms:includeView';
-	else if( nFile.extension == "txt" || nFile.extension == "html")
+	else if( nFile.extension == "sms.txt" || nFile.extension == "txt" || nFile.extension == "html")
 		schema = 'nms:delivery';
 
 	switch(schema)
@@ -953,7 +1022,9 @@ NeoSync.getFetchFromFile = function( fileName ){
 	if( nFile.extension == "js" || nFile.extension == "jssp" || nFile.extension == "sql")
 		specificKey += "." + nFile.extension;
 
-	if( nFile.extension == "iview.txt" || nFile.extension == "txt")
+	if( nFile.extension == "sms.txt")
+		specificKey += '[sms]';
+	else if( nFile.extension == "iview.txt" || nFile.extension == "txt")
 		specificKey += '[txt]';
 	else if( nFile.extension == "iview.html" || nFile.extension == "html")
 		specificKey += '[html]';
@@ -965,15 +1036,16 @@ NeoSync.prototype.kill = function(){
 	this.watcher.close();
 };
 NeoSync.prototype.backup = function( fetch ){
+	//console.log("FECTH BACKUP IS : ", fetch);
 	//var backupNS = new NeoSync();
 	var nFetch = NeoSync.FetchRequest( fetch );
 	var backupDir = getUserHome() + path.sep + 'NeoSync'+ path.sep + 'BACKUP' ;
 	nFetch.directory = backupDir;
 	var now = new Date();
 	nFetch.fileSuffix = dateFormat(now, "dd_mm_yyyy-hhMMss");
+	//console.log("NFECTH BACKUP IS : ", nFetch);
 	//backupNS.name = "backupNS";
 	//backupNS.processFetch( nFetch );
-	//backupNS.pushAction( function(){console.log("ET MERDE !!! ")}, false, "HAHA" );
 	this.pushAction( this.processFetch, false, nFetch );
 };
 
