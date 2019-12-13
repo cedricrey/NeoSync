@@ -1,5 +1,11 @@
 # NeoSync
 
+## Goobye NeoSync
+:new: NeoSync is becoming the fresh new **[ACSync](https://www.npmjs.com/package/ac-sync)** ! Please, see more on [GitHub](https://github.com/cedricrey/ac-sync) and [npmjs](https://www.npmjs.com/package/ac-sync)
+
+
+# What was NeoSync (you can still use it)
+
 CLI Synchronisation utility between local files and Neolane / Adobe Campaign
 
 In French :

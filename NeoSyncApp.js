@@ -11,7 +11,7 @@ var htmlDir = __dirname + path.sep + "html" + path.sep ;
 //ns = new NeoSync({fetch:"nms:delivery=DM92123[html]"});
 //ns = new NeoSync();
 //ns.processFetch("nms:delivery=DM92123[html]");
-	
+//process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';	
 //console.log(ns);
 NeoSyncApp = function(){
 	//this.testNeo = new NeoSync({ watch : true, onFileRefresh : this.onFileRefresh.bind(this) });

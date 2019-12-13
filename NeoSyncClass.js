@@ -11,6 +11,7 @@ var fs = require('fs'),
 	keypress = require('keypress'),
 
   	SoapHttpClient = require('./node_modules/soap/lib/http'); //Pour surcharge
+  	process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 	//Surcharge de la méthode handleResponse car suppression des commentaire ???
 	SoapHttpClient.prototype.handleResponse = function(req, res, body) {
 	  //debug('Http response body: %j', body);
@@ -65,8 +66,6 @@ function NeoSync( options ){
 	//this.watching = options.watch || false;
 	this.pushAll = options.pushAll || false;
 	this.filePattern = options.filePattern || false;
-	this.fetch = options.fetch || "";
-	this.push = options.push || "";
 	this.onFileRefresh = options.onFileRefresh || null;
 	this.onFetchDone = options.onFetchDone || null;
 	this.watchInPause = false;
@@ -1049,6 +1048,14 @@ NeoSync.prototype.backup = function( fetch ){
 	this.pushAction( this.processFetch, false, nFetch );
 };
 
+
+/***********Public method for instance of NeoSync*************/
+NeoSync.prototype.fetch = function( fetch ){
+	this.execFetch( null, null, fetch );
+}
+NeoSync.prototype.push = function( push ){
+	this.execPush( null, null, push);
+}
 /*
  * watcher
 	  .on('add', function(path) { console.log('File', path, 'has been added'); })
